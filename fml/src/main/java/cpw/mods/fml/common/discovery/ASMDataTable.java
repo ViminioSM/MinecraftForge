@@ -90,6 +90,11 @@ public class ASMDataTable
         @Override
         public boolean apply(ASMData data)
         {
+            return test(data);
+        }
+        @Override
+        public boolean test(ASMData data)
+        {
             return container.getSource().equals(data.candidate.getModContainer());
         }
     }

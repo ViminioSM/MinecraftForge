@@ -1,0 +1,19 @@
+--- ../src-base/minecraft/net/minecraft/client/stream/Metadata.java
++++ ../src-work/minecraft/net/minecraft/client/stream/Metadata.java
+@@ -1,8 +1,8 @@
+ package net.minecraft.client.stream;
+ 
+-import com.google.common.base.Objects;
++import com.google.common.base.MoreObjects;
+ import com.google.common.collect.Maps;
+ import com.google.gson.Gson;
+ import cpw.mods.fml.relauncher.Side;
+ import cpw.mods.fml.relauncher.SideOnly;
+ import java.util.Map;
+@@ -83,4 +83,4 @@
+     public String toString()
+     {
+-        return Objects.toStringHelper(this).add("name", this.field_152812_b).add("description", this.field_152813_c).add("data", this.func_152806_b()).toString();
++        return MoreObjects.toStringHelper(this).add("name", this.field_152812_b).add("description", this.field_152813_c).add("data", this.func_152806_b()).toString();
+     }
+ }

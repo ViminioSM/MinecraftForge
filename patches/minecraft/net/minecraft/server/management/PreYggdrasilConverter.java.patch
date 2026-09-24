@@ -1,0 +1,14 @@
+--- ../src-base/minecraft/net/minecraft/server/management/PreYggdrasilConverter.java
++++ ../src-work/minecraft/net/minecraft/server/management/PreYggdrasilConverter.java
+@@ -55,5 +55,9 @@
+             public boolean apply(Object p_apply_1_)
+             {
+                 return this.func_152733_a((String)p_apply_1_);
+             }
++            public boolean test(Object p_test_1_)
++            {
++                return this.func_152733_a((String)p_test_1_);
++            }
+         }), String.class);
+ 
+         if (p_152717_0_.isServerInOnlineMode())
