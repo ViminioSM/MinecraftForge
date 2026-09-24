@@ -201,6 +201,12 @@ public class ClassPatchManager {
                     jis.closeEntry();
                 }
             }
+            catch (java.io.EOFException e)
+            {
+                // Truncated patch stream: stop instead of spinning forever.
+                FMLRelaunchLog.log(Level.WARN, e, "Binary patch stream ended unexpectedly - ignoring remaining patches");
+                break;
+            }
             catch (IOException e)
             {
             }

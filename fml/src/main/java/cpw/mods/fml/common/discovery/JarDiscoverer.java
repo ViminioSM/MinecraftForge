@@ -70,6 +70,12 @@ public class JarDiscoverer implements ITypeDiscoverer
                     // versions may also exceed what the bundled ASM can read).
                     continue;
                 }
+                if (ze.getName()!=null && (ze.getName().startsWith("org/openjdk/nashorn/") || ze.getName().startsWith("jakarta/")))
+                {
+                    // Shaded runtime/impl packages bundled by some libraries
+                    // ( scripting engine, EE APIs ) - never mod classes.
+                    continue;
+                }
                 Matcher match = classFile.matcher(ze.getName());
                 if (match.matches())
                 {
