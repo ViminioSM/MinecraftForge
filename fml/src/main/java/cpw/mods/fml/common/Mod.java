@@ -109,7 +109,7 @@ public @interface Mod
 
     /**
      * A version range specifying compatible save version information. If your mod follows good version numbering
-     * practice <a href="http://semver.org/">Like this (http://semver.org/)</a> then this should be sufficient.
+     * practice <a href="https://semver.org/">Like this (https://semver.org/)</a> then this should be sufficient.
      *
      * Advanced users can specify a {@link SaveInspectionHandler} instead.
      * @return A version range as specified by the maven version range specification or the empty string

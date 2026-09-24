@@ -594,7 +594,7 @@ public class CoreModManager {
         @SuppressWarnings("unchecked")
         List<ITweaker> tweakers = (List<ITweaker>) Launch.blackboard.get("Tweaks");
         // Basically a copy of Collections.sort pre 8u20, optimized as we know we're an array list.
-        // Thanks unhelpful fixer of http://bugs.java.com/view_bug.do?bug_id=8032636
+        // Thanks unhelpful fixer of https://bugs.openjdk.org/browse/JDK-8032636
         ITweaker[] toSort = tweakers.toArray(new ITweaker[tweakers.size()]);
         Arrays.sort(toSort, new Comparator<ITweaker>() {
             @Override
@@ -640,7 +640,7 @@ public class CoreModManager {
             }
         });
         // Basically a copy of Collections.sort, optimized as we know we're an array list.
-        // Thanks unhelpful fixer of http://bugs.java.com/view_bug.do?bug_id=8032636
+        // Thanks unhelpful fixer of https://bugs.openjdk.org/browse/JDK-8032636
         for (int j = 0; j < toSort.length; j++) {
             tweakers.set(j, toSort[j]);
         }

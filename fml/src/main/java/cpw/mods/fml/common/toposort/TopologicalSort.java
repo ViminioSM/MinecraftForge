@@ -33,7 +33,7 @@ import cpw.mods.fml.common.FMLLog;
 /**
  * Topological sort for mod loading
  *
- * Based on a variety of sources, including http://keithschwarz.com/interesting/code/?dir=topological-sort
+ * Based on a variety of sources, including https://keithschwarz.com/interesting/code/?dir=topological-sort
  * @author cpw
  *
  */

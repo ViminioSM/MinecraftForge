@@ -7,7 +7,7 @@
   "filePath":"@universal_jar@",
   "welcome":"Welcome to the simple @project@ installer.",
   "minecraft":"@minecraft_version@",
-  "mirrorList" : "http://files.minecraftforge.net/mirror-brand.list",
+  "mirrorList" : "https://maven.minecraftforge.net/mirror-brand.list",
   "logo":"/big_logo.png"
 },
 "versionInfo": {
@@ -21,7 +21,7 @@
   "libraries": [
     {
       "name": "@artifact@",
-      "url": "http://files.minecraftforge.net/maven/"
+      "url": "https://maven.minecraftforge.net/"
     },
     {
       "name": "net.minecraft:launchwrapper:1.9",
@@ -33,14 +33,14 @@
     },
     {
       "name": "org.scala-lang:scala-library:2.10.2",
-      "url" : "http://files.minecraftforge.net/maven/",
+      "url" : "https://maven.minecraftforge.net/",
       "checksums" : [ "6ba65d12cd09d441083262d6f73d2257fec7c663", "65de4339eaed1c3675485fb03a3532fecfd8e8cd" ],
       "serverreq":true,
       "clientreq":true
     },
     {
       "name": "org.scala-lang:scala-compiler:2.10.2",
-      "url" : "http://files.minecraftforge.net/maven/",
+      "url" : "https://maven.minecraftforge.net/",
       "checksums" : [ "64c8b1380cc53d6850823d6e4e7ae984aa44ef9c", "99fd0ffb66f3088b0cd1071315fd5eb2b2b070ff" ],
       "serverreq":true,
       "clientreq":true

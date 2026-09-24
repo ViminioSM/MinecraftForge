@@ -56,7 +56,7 @@ import java.nio.ByteBuffer;
  *
  * The patch file follows the GDIFF file specification available at
  *
- * <a href="http://www.w3.org/TR/NOTE-gdiff-19970901.html">http://www.w3.org/TR/NOTE-gdiff-19970901.html</a>.
+ * <a href="https://www.w3.org/TR/NOTE-gdiff-19970901.html">https://www.w3.org/TR/NOTE-gdiff-19970901.html</a>.
  */
 public class GDiffPatcher {
 

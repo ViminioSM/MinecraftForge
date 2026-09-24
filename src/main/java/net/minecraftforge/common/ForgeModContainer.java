@@ -85,8 +85,9 @@ public class ForgeModContainer extends DummyModContainer implements WorldAccessC
         meta.description = "Minecraft Forge is a common open source API allowing a broad range of mods " +
                            "to work cooperatively together. It allows many mods to be created without " +
                            "them editing the main Minecraft code.";
-        meta.url         = "http://MinecraftForge.net";
-        meta.updateUrl   = "http://MinecraftForge.net/forum/index.php/topic,5.0.html";
+        // Old SMF forum URLs (MinecraftForge.net/forum/...) are dead; point at the live site.
+        meta.url         = "https://minecraftforge.net/";
+        meta.updateUrl   = "https://files.minecraftforge.net/";
         meta.screenshots = new String[0];
         meta.logoFile    = "/forge_logo.png";
 

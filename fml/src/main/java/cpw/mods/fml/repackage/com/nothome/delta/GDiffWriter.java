@@ -31,7 +31,7 @@ import java.io.OutputStream;
 
 /**
  * Outputs a diff following the GDIFF file specification available at
- * http://www.w3.org/TR/NOTE-gdiff-19970901.html.
+ * https://www.w3.org/TR/NOTE-gdiff-19970901.html.
  */
 public class GDiffWriter implements DiffWriter {
     

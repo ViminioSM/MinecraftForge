@@ -22,7 +22,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 
 /**
  *  Wavefront Object importer
- *  Based heavily off of the specifications found at http://en.wikipedia.org/wiki/Wavefront_.obj_file
+ *  Based heavily off of the specifications found at https://en.wikipedia.org/wiki/Wavefront_.obj_file
  */
 public class WavefrontObject implements IModelCustom
 {

@@ -58,6 +58,9 @@ public class Start
     
     private static String[] getSession(String username, String password) throws UnsupportedEncodingException
     {
+        // NOTE: login.minecraft.net is long deprecated/retired by Mojang; this legacy
+        // dev-launcher login path is kept unchanged for historical behaviour. Do not
+        // "fix" the URL without replacing the whole auth flow (authlib/Yggdrasil).
         String parameters = "http://login.minecraft.net/?user=" + URLEncoder.encode(username, "UTF-8") +
                 "&password=" + URLEncoder.encode(password, "UTF-8") +
                 "&version=" + 13;

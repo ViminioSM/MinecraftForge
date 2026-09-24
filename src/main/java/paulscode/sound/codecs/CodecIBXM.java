@@ -55,8 +55,9 @@ import ibxm.ScreamTracker3;
  *    http://www.paulscode.com
  *</b><br><br>
  *<b>
- *    This software is based on or using the IBXM library available from
- *    http://www.geocities.com/sunet2000/
+ *    This software is based on or using the IBXM library originally available from
+ *    http://www.geocities.com/sunet2000/ (GeoCities shut down in 2009; archived at
+ *    https://web.archive.org/web/2009/http://www.geocities.com/sunet2000/)
  *</b><br><br>
  *<br><b>
  * IBXM is copyright (c) 2007, Martin Cameron, and is licensed under the BSD

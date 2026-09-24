@@ -16,7 +16,7 @@ import org.apache.logging.log4j.Level;
 import com.google.common.io.Files;
 
 /**
- * Copied from http://stackoverflow.com/questions/1399126/java-util-zip-recreating-directory-structure
+ * Copied from https://stackoverflow.com/questions/1399126/java-util-zip-recreating-directory-structure
  * because the code looked very tidy and neat. Thanks, McDowell!
  *
  * @author McDowell

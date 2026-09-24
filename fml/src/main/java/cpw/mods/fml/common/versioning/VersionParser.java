@@ -24,10 +24,11 @@ import cpw.mods.fml.common.LoaderException;
 
 /**
  * Parses version strings according to the specification here:
- * http://docs.codehaus.org/display/MAVEN/Versioning
+ * https://web.archive.org/web/2015/http://docs.codehaus.org/display/MAVEN/Versioning
+ * (Codehaus was retired in 2015; link preserved via the Wayback Machine.)
  * and allows for comparison of versions based on that document.
  * Bounded version specifications are defined as
- * http://maven.apache.org/plugins/maven-enforcer-plugin/rules/versionRanges.html
+ * https://maven.apache.org/enforcer/enforcer-rules/versionRanges.html
  *
  * Borrows heavily from maven version range management code
  *

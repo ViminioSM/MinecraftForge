@@ -43,7 +43,7 @@ public class FMLConfigGuiFactory implements IModGuiFactory
             list.add(new DummyConfigElement<Boolean>("imABoolean", true, ConfigGuiType.BOOLEAN, "fml.config.sample.imABoolean").setRequiresMcRestart(true));
             list.add(new DummyConfigElement<Integer>("imAnInteger", 42, ConfigGuiType.INTEGER, "fml.config.sample.imAnInteger", -1, 256).setRequiresMcRestart(true));
             list.add(new DummyConfigElement<Double>("imADouble", 42.4242D, ConfigGuiType.DOUBLE, "fml.config.sample.imADouble", -1.0D, 256.256D).setRequiresMcRestart(true));
-            list.add(new DummyConfigElement<String>("imAString", "http://www.montypython.net/scripts/string.php", ConfigGuiType.STRING, "fml.config.sample.imAString").setRequiresMcRestart(true));
+            list.add(new DummyConfigElement<String>("imAString", "https://example.com", ConfigGuiType.STRING, "fml.config.sample.imAString").setRequiresMcRestart(true));
             
             // Lists category
             listsList.add(new DummyListElement<Boolean>("booleanList", new Boolean[] {true, false, true, false, true, false, true, false}, ConfigGuiType.BOOLEAN, "fml.config.sample.booleanList"));

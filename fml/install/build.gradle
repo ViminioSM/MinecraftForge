@@ -3,14 +3,24 @@ buildscript {
         mavenCentral()
         maven {
             name = "forge"
-            url = "http://files.minecraftforge.net/maven"
+            url = "https://maven.minecraftforge.net/"
+        }
+        // Fallback to the legacy files mirror (https). The old http:// URL
+        // now redirects, plain http is blocked by modern Gradle/JDKs.
+        maven {
+            name = "forge-files-fallback"
+            url = "https://files.minecraftforge.net/maven"
         }
         maven {
-            name = "sonatype"
-            url = "https://oss.sonatype.org/content/repositories/snapshots/"
+            // The old Sonatype OSS snapshot host was sunset; snapshots live on Central Portal now.
+            name = "central-snapshots"
+            url = "https://central.sonatype.com/repository/maven-snapshots/"
         }
     }
     dependencies {
+        // NOTE: ForgeGradle 1.2 has no fixed release; 1.2-SNAPSHOT is the only
+        // available line for the 1.7.10 toolchain. It must be resolved from
+        // the Forge maven above (https). Do not pin to a release version.
         classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
     }
 }
@@ -18,7 +28,7 @@ buildscript {
 apply plugin: '${name}'
 
 version = "1.0"
-group= "com.yourname.modid" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+group= "com.yourname.modid" // https://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "modid"
 
 minecraft {
@@ -37,8 +47,8 @@ dependencies {
     //compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
 
     // for more info...
-    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
-    // http://www.gradle.org/docs/current/userguide/dependency_management.html
+    // https://docs.gradle.org/current/userguide/artifact_dependencies_tutorial.html
+    // https://docs.gradle.org/current/userguide/dependency_management.html
 
 }
 

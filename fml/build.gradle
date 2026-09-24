@@ -4,14 +4,24 @@ buildscript {
         mavenLocal()
         maven {
             name = "forge"
-            url = "http://files.minecraftforge.net/maven"
+            url = "https://maven.minecraftforge.net/"
+        }
+        // Fallback to the legacy files mirror (https). The old http:// URL
+        // now redirects, plain http is blocked by modern Gradle/JDKs.
+        maven {
+            name = "forge-files-fallback"
+            url = "https://files.minecraftforge.net/maven"
         }
         maven {
-            name = "sonatype"
-            url = "https://oss.sonatype.org/content/repositories/snapshots/"
+            // The old Sonatype OSS snapshot host was sunset; snapshots live on Central Portal now.
+            name = "central-snapshots"
+            url = "https://central.sonatype.com/repository/maven-snapshots/"
         }
     }
     dependencies {
+        // NOTE: ForgeGradle 1.2 has no fixed release; 1.2-SNAPSHOT is the only
+        // available line for the 1.7.10 toolchain. It must be resolved from
+        // the Forge maven above (https). Do not pin to a release version.
         classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
     }
 }
@@ -68,7 +78,7 @@ uploadArchives {
 
                         scm {
                             url 'https://github.com/MinecraftForge/FML'
-                            connection 'scm:git:git://github.com/MinecraftForge/FML.git'
+                            connection 'scm:git:https://github.com/MinecraftForge/FML.git'
                             developerConnection 'scm:git:git@github.com:MinecraftForge/FML.git'
                         }
 
@@ -80,7 +90,7 @@ uploadArchives {
                         licenses {
                             license {
                                 name 'GNU Lesser Public License (LGPL), Version 2.1'
-                                url 'http://www.gnu.org/licenses/lgpl-2.1.txt'
+                                url 'https://www.gnu.org/licenses/lgpl-2.1.txt'
                                 distribution 'repo'
                             }
                         }
