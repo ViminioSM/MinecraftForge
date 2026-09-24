@@ -16,7 +16,17 @@
       "url" : "https://repo.maven.apache.org/maven2"
     },
     {
-      "name": "org.ow2.asm:asm-debug-all:5.2",
+      "name": "org.ow2.asm:asm:9.6",
+      "children" : ["sources"],
+      "url" : "https://repo.maven.apache.org/maven2"
+    },
+    {
+      "name": "org.ow2.asm:asm-tree:9.6",
+      "children" : ["sources"],
+      "url" : "https://repo.maven.apache.org/maven2"
+    },
+    {
+      "name": "org.ow2.asm:asm-commons:9.6",
       "children" : ["sources"],
       "url" : "https://repo.maven.apache.org/maven2"
     },

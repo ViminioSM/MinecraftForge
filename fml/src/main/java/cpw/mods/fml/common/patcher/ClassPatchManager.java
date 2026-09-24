@@ -149,17 +149,27 @@ public class ClassPatchManager {
         JarInputStream jis;
         try
         {
-            InputStream binpatchesCompressed = getClass().getResourceAsStream("/binpatches.pack.lzma");
-            if (binpatchesCompressed==null)
+            // Preferred on modern runtimes: plain jar, no Pack200 involved.
+            // (java.util.jar.Pack200 was removed from the JDK in Java 14.)
+            InputStream unpackedPatches = getClass().getResourceAsStream("/binpatches.jar");
+            if (unpackedPatches != null)
             {
-                FMLRelaunchLog.log(Level.ERROR, "The binary patch set is missing. Either you are in a development environment, or things are not going to work!");
-                return;
+                jis = new JarInputStream(unpackedPatches);
             }
-            LzmaInputStream binpatchesDecompressed = new LzmaInputStream(binpatchesCompressed);
-            ByteArrayOutputStream jarBytes = new ByteArrayOutputStream();
-            JarOutputStream jos = new JarOutputStream(jarBytes);
-            Pack200.newUnpacker().unpack(binpatchesDecompressed, jos);
-            jis = new JarInputStream(new ByteArrayInputStream(jarBytes.toByteArray()));
+            else
+            {
+                InputStream binpatchesCompressed = getClass().getResourceAsStream("/binpatches.pack.lzma");
+                if (binpatchesCompressed==null)
+                {
+                    FMLRelaunchLog.log(Level.ERROR, "The binary patch set is missing. Either you are in a development environment, or things are not going to work!");
+                    return;
+                }
+                LzmaInputStream binpatchesDecompressed = new LzmaInputStream(binpatchesCompressed);
+                ByteArrayOutputStream jarBytes = new ByteArrayOutputStream();
+                JarOutputStream jos = new JarOutputStream(jarBytes);
+                Pack200.newUnpacker().unpack(binpatchesDecompressed, jos);
+                jis = new JarInputStream(new ByteArrayInputStream(jarBytes.toByteArray()));
+            }
         }
         catch (Exception e)
         {

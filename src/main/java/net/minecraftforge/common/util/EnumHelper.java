@@ -1,7 +1,12 @@
 package net.minecraftforge.common.util;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.*;
 import java.util.*;
+
+import sun.misc.Unsafe;
 
 import cpw.mods.fml.common.FMLLog;
 import net.minecraft.block.BlockPressurePlate.Sensitivity;
@@ -24,11 +29,11 @@ import net.minecraftforge.classloading.FMLForgePlugin;
 
 public class EnumHelper
 {
-    private static Object reflectionFactory      = null;
-    private static Method newConstructorAccessor = null;
-    private static Method newInstance            = null;
-    private static Method newFieldAccessor       = null;
-    private static Method fieldAccessorSet       = null;
+    private static Unsafe unsafe                 = null;
+    // Legacy (Java 8 and earlier) enum construction route, kept as a fallback.
+    private static Object legacyReflectionFactory      = null;
+    private static Method legacyNewConstructorAccessor = null;
+    private static Method legacyNewInstance            = null;
     private static boolean isSetup               = false;
 
     //Some enums are decompiled with extra arguments, so lets check for that
@@ -118,52 +123,157 @@ public class EnumHelper
 
         try
         {
-            Method getReflectionFactory = Class.forName("sun.reflect.ReflectionFactory").getDeclaredMethod("getReflectionFactory");
-            reflectionFactory      = getReflectionFactory.invoke(null);
-            newConstructorAccessor = Class.forName("sun.reflect.ReflectionFactory").getDeclaredMethod("newConstructorAccessor", Constructor.class);
-            newInstance            = Class.forName("sun.reflect.ConstructorAccessor").getDeclaredMethod("newInstance", Object[].class);
-            newFieldAccessor       = Class.forName("sun.reflect.ReflectionFactory").getDeclaredMethod("newFieldAccessor", Field.class, boolean.class);
-            fieldAccessorSet       = Class.forName("sun.reflect.FieldAccessor").getDeclaredMethod("set", Object.class, Object.class);
+            // sun.misc.Unsafe lives in the jdk.unsupported module, which is
+            // present and exported on every relevant runtime (8 through 21+).
+            // It replaces the removed sun.reflect internals previously used
+            // here (Field.modifiers, ReflectionFactory accessors).
+            Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
+            theUnsafe.setAccessible(true);
+            unsafe = (Unsafe) theUnsafe.get(null);
         }
         catch (Exception e)
         {
             e.printStackTrace();
         }
 
+        try
+        {
+            // Legacy construction route, only present on Java 8 and earlier.
+            Method getReflectionFactory = Class.forName("sun.reflect.ReflectionFactory").getDeclaredMethod("getReflectionFactory");
+            legacyReflectionFactory      = getReflectionFactory.invoke(null);
+            legacyNewConstructorAccessor = Class.forName("sun.reflect.ReflectionFactory").getDeclaredMethod("newConstructorAccessor", Constructor.class);
+            legacyNewInstance            = Class.forName("sun.reflect.ConstructorAccessor").getDeclaredMethod("newInstance", Object[].class);
+        }
+        catch (Exception e)
+        {
+            // Expected on Java 9+: the legacy route is simply unavailable there.
+            legacyReflectionFactory = null;
+        }
+
         isSetup = true;
     }
 
     /*
-     * Everything below this is found at the site below, and updated to be able to compile in Eclipse/Java 1.6+
-     * Also modified for use in decompiled code.
-     * Found at: http://niceideas.ch/roller2/badtrash/entry/java_create_enum_instances_dynamically
+     * Enum instances are created through MethodHandles: unlike
+     * Constructor.newInstance, a MethodHandle to the enum constructor does not
+     * refuse to create enum objects, and it invokes the real constructor, so
+     * custom enum fields are initialized exactly as on Java 8.
+     * (Technique verified on runtimes 9 through 21. MethodHandles.Lookup and
+     * MethodType exist since Java 7, so this compiles for 1.8 targets; only
+     * privateLookupIn itself is looked up reflectively.)
      */
-    private static Object getConstructorAccessor(Class<?> enumClass, Class<?>[] additionalParameterTypes) throws Exception
-    {
-        Class<?>[] parameterTypes = new Class[additionalParameterTypes.length + 2];
-        parameterTypes[0] = String.class;
-        parameterTypes[1] = int.class;
-        System.arraycopy(additionalParameterTypes, 0, parameterTypes, 2, additionalParameterTypes.length);
-        return newConstructorAccessor.invoke(reflectionFactory, enumClass.getDeclaredConstructor(parameterTypes));
-    }
-
     private static < T extends Enum<? >> T makeEnum(Class<T> enumClass, String value, int ordinal, Class<?>[] additionalTypes, Object[] additionalValues) throws Exception
     {
+        Class<?>[] parameterTypes = new Class[additionalTypes.length + 2];
+        parameterTypes[0] = String.class;
+        parameterTypes[1] = int.class;
+        System.arraycopy(additionalTypes, 0, parameterTypes, 2, additionalTypes.length);
         Object[] parms = new Object[additionalValues.length + 2];
         parms[0] = value;
         parms[1] = Integer.valueOf(ordinal);
         System.arraycopy(additionalValues, 0, parms, 2, additionalValues.length);
-        return enumClass.cast(newInstance.invoke(getConstructorAccessor(enumClass, additionalTypes), new Object[] {parms}));
+        try
+        {
+            Method privateLookupIn = MethodHandles.class.getMethod("privateLookupIn", Class.class, MethodHandles.Lookup.class);
+            Object lookup = privateLookupIn.invoke(null, enumClass, MethodHandles.lookup());
+            MethodType constructorType = MethodType.methodType(void.class, parameterTypes);
+            MethodHandle constructor = (MethodHandle) lookup.getClass().getMethod("findConstructor", Class.class, MethodType.class).invoke(lookup, enumClass, constructorType);
+            try
+            {
+                return enumClass.cast(constructor.invokeWithArguments(Arrays.asList(parms)));
+            }
+            catch (Throwable t)
+            {
+                if (t instanceof Exception)
+                {
+                    throw (Exception) t;
+                }
+                if (t instanceof Error)
+                {
+                    throw (Error) t;
+                }
+                throw new RuntimeException(t);
+            }
+        }
+        catch (NoSuchMethodException e)
+        {
+            // Java 8 and earlier: fall back to the legacy ConstructorAccessor route.
+            return enumClass.cast(makeEnumLegacy(enumClass, parameterTypes, parms));
+        }
+    }
+
+    private static Object makeEnumLegacy(Class<?> enumClass, Class<?>[] parameterTypes, Object[] parms) throws Exception
+    {
+        if (legacyReflectionFactory == null)
+        {
+            throw new IllegalStateException("No enum construction route available on this runtime");
+        }
+        Object accessor = legacyNewConstructorAccessor.invoke(legacyReflectionFactory, enumClass.getDeclaredConstructor(parameterTypes));
+        return legacyNewInstance.invoke(accessor, new Object[] { parms });
     }
 
     public static void setFailsafeFieldValue(Field field, Object target, Object value) throws Exception
     {
-        field.setAccessible(true);
-        Field modifiersField = Field.class.getDeclaredField("modifiers");
-        modifiersField.setAccessible(true);
-        modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-        Object fieldAccessor = newFieldAccessor.invoke(reflectionFactory, field, false);
-        fieldAccessorSet.invoke(fieldAccessor, target, value);
+        // Writes through Unsafe, bypassing final checks and module access
+        // checks alike. Used for the $VALUES array and the enum caches in
+        // java.lang.Class, which are inaccessible via setAccessible on
+        // modern runtimes.
+        Class<?> type = field.getType();
+        if (Modifier.isStatic(field.getModifiers()))
+        {
+            Object base = unsafe.staticFieldBase(field);
+            long offset = unsafe.staticFieldOffset(field);
+            putValue(base, offset, type, value);
+        }
+        else
+        {
+            long offset = unsafe.objectFieldOffset(field);
+            putValue(target, offset, type, value);
+        }
+    }
+
+    private static void putValue(Object base, long offset, Class<?> type, Object value)
+    {
+        if (!type.isPrimitive())
+        {
+            unsafe.putObject(base, offset, value);
+        }
+        else if (type == int.class)
+        {
+            unsafe.putInt(base, offset, ((Number) value).intValue());
+        }
+        else if (type == long.class)
+        {
+            unsafe.putLong(base, offset, ((Number) value).longValue());
+        }
+        else if (type == boolean.class)
+        {
+            unsafe.putBoolean(base, offset, ((Boolean) value).booleanValue());
+        }
+        else if (type == float.class)
+        {
+            unsafe.putFloat(base, offset, ((Number) value).floatValue());
+        }
+        else if (type == double.class)
+        {
+            unsafe.putDouble(base, offset, ((Number) value).doubleValue());
+        }
+        else if (type == short.class)
+        {
+            unsafe.putShort(base, offset, ((Number) value).shortValue());
+        }
+        else if (type == byte.class)
+        {
+            unsafe.putByte(base, offset, ((Number) value).byteValue());
+        }
+        else if (type == char.class)
+        {
+            unsafe.putChar(base, offset, ((Character) value).charValue());
+        }
+        else
+        {
+            throw new IllegalArgumentException("Unsupported field type " + type);
+        }
     }
 
     private static void blankField(Class<?> enumClass, String fieldName) throws Exception
@@ -172,7 +282,6 @@ public class EnumHelper
         {
             if (field.getName().contains(fieldName))
             {
-                field.setAccessible(true);
                 setFailsafeFieldValue(field, enumClass, null);
                 break;
             }

@@ -1,8 +1,6 @@
 package cpw.mods.fml.common.registry;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import org.apache.logging.log4j.Level;
 import com.google.common.base.Throwables;
 import cpw.mods.fml.common.FMLLog;
@@ -63,31 +61,9 @@ class ObjectHolderRef {
         {
             throw new IllegalStateException(String.format("The ObjectHolder annotation cannot apply to a field that is not an Item or Block (found : %s at %s.%s)", field.getType().getName(), field.getClass().getName(), field.getName()));
         }
-        makeWritable(field);
-    }
-
-    private static Field modifiersField;
-    private static Object reflectionFactory;
-    private static Method newFieldAccessor;
-    private static Method fieldAccessorSet;
-    private static void makeWritable(Field f)
-    {
-        try
-        {
-            if (modifiersField == null)
-            {
-                Method getReflectionFactory = Class.forName("sun.reflect.ReflectionFactory").getDeclaredMethod("getReflectionFactory");
-                reflectionFactory = getReflectionFactory.invoke(null);
-                newFieldAccessor = Class.forName("sun.reflect.ReflectionFactory").getDeclaredMethod("newFieldAccessor", Field.class, boolean.class);
-                fieldAccessorSet = Class.forName("sun.reflect.FieldAccessor").getDeclaredMethod("set", Object.class, Object.class);
-                modifiersField = Field.class.getDeclaredField("modifiers");
-                modifiersField.setAccessible(true);
-            }
-            modifiersField.setInt(f, f.getModifiers() & ~Modifier.FINAL);
-        } catch (Exception e)
-        {
-            throw Throwables.propagate(e);
-        }
+        // The final modifier (if present) is stripped at class-load time by
+        // ObjectHolderTransformer, so the field is writable here on every
+        // runtime - no sun.reflect internals required.
     }
 
     public boolean isValid()
@@ -121,8 +97,7 @@ class ObjectHolderRef {
         }
         try
         {
-            Object fieldAccessor = newFieldAccessor.invoke(reflectionFactory, field, false);
-            fieldAccessorSet.invoke(fieldAccessor, null, thing);
+            UnsafeHolderWriter.setStatic(field, thing);
         }
         catch (Exception e)
         {

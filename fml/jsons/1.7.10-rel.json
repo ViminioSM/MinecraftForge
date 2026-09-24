@@ -31,10 +31,25 @@
       "serverreq":true
     },
     {
-      "name": "org.ow2.asm:asm-all:5.2",
+      "name": "org.ow2.asm:asm:9.6",
       "url" : "https://maven.minecraftforge.net/",
-      "checksums" : [ "2ea49e08b876bbd33e0a7ce75c8f371d29e1f10a", "f5ad16c7f0338b541978b0430d51dc83" ],
-      "serverreq":true
+      "checksums" : [ "aa205cf0a06dbd8e04ece91c0b37c3f5d567546a", "6f8bccf756f170d4185bb24c8c2d2020" ],
+      "serverreq":true,
+      "clientreq":true
+    },
+    {
+      "name": "org.ow2.asm:asm-tree:9.6",
+      "url" : "https://maven.minecraftforge.net/",
+      "checksums" : [ "c0cdda9d211e965d2a4448aa3fd86110f2f8c2de", "6062608f1a98afe1e853d01fa1221a9e" ],
+      "serverreq":true,
+      "clientreq":true
+    },
+    {
+      "name": "org.ow2.asm:asm-commons:9.6",
+      "url" : "https://maven.minecraftforge.net/",
+      "checksums" : [ "f1a9e5508eff490744144565c47326c8648be309", "9e317c75534bd1da8c00a67c618ab288" ],
+      "serverreq":true,
+      "clientreq":true
     },
     {
       "name": "com.typesafe.akka:akka-actor_2.11:2.3.16",

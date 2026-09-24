@@ -63,6 +63,13 @@ public class JarDiscoverer implements ITypeDiscoverer
                 {
                     continue;
                 }
+                if (ze.getName()!=null && (ze.getName().startsWith("META-INF/versions/") || ze.getName().equals("module-info.class") || ze.getName().endsWith("/module-info.class")))
+                {
+                    // Multi-release jar versioned entries and module descriptors
+                    // are never mod classes - skip them (their class file
+                    // versions may also exceed what the bundled ASM can read).
+                    continue;
+                }
                 Matcher match = classFile.matcher(ze.getName());
                 if (match.matches())
                 {

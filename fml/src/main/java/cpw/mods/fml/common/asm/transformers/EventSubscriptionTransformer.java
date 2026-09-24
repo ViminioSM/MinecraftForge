@@ -162,7 +162,10 @@ public class EventSubscriptionTransformer implements IClassTransformer
                 return edited;
         }
 
-        Type tSuper = Type.getType(classNode.superName);
+        // NB: superName is an internal name, not a descriptor - getObjectType
+        // accepts it on every ASM version, while getType(String) rejects it
+        // on ASM 9+ (older ASM accepted it leniently).
+        Type tSuper = Type.getObjectType(classNode.superName);
 
         //Add private static ListenerList LISTENER_LIST
         classNode.fields.add(new FieldNode(ACC_PRIVATE | ACC_STATIC, "LISTENER_LIST", listDesc, null, null));

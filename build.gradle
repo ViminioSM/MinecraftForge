@@ -17,12 +17,20 @@ buildscript {
             name = "central-snapshots"
             url = "https://central.sonatype.com/repository/maven-snapshots/"
         }
+        maven {
+            // Mojang libraries (hosts artifacts such as lzma:lzma used below).
+            name = "minecraft"
+            url = "https://libraries.minecraft.net/"
+        }
     }
     dependencies {
         // NOTE: ForgeGradle 1.2 has no fixed release; 1.2-SNAPSHOT is the only
         // available line for the 1.7.10 toolchain. It must be resolved from
         // the Forge maven above (https). Do not pin to a release version.
         classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
+        // LZMA decoder for the packageUniversal binpatches hook below
+        // (same library FML itself uses at runtime to read the patches).
+        classpath 'lzma:lzma:0.0.1'
     }
 }
 
@@ -66,6 +74,92 @@ if (project.hasProperty("crowdinKey"))
 
 launch4j {
     jreMinVersion = '1.8.0'
+}
+
+// Pack200 was removed from the JDK in Java 14, so the legacy
+// binpatches.pack.lzma resource cannot be unpacked on modern runtimes.
+// After ForgeGradle builds the universal jar (this build itself runs on the
+// JDK 8 bridge, where Pack200 still exists), unpack the patches once and
+// embed them as plain binpatches.jar. ClassPatchManager prefers that
+// resource and only falls back to the Pack200 path on legacy runtimes.
+packageUniversal.doLast {
+    File uni = archivePath
+    logger.lifecycle("Embedding Pack200-free binpatches.jar into ${uni.name}")
+    def zipFile = new java.util.zip.ZipFile(uni)
+    try
+    {
+        if (zipFile.getEntry('binpatches.jar') != null)
+        {
+            logger.lifecycle("binpatches.jar already present, skipping")
+            return
+        }
+        def packEntry = zipFile.getEntry('binpatches.pack.lzma')
+        if (packEntry == null)
+        {
+            logger.warn("binpatches.pack.lzma not found in ${uni.name}, skipping")
+            return
+        }
+        byte[] packed = zipFile.getInputStream(packEntry).bytes
+        Class lzmaIn = Class.forName('LZMA.LzmaInputStream')
+        InputStream lzmaDecoded = (InputStream) lzmaIn.getConstructor(InputStream).newInstance(new ByteArrayInputStream(packed))
+        ByteArrayOutputStream jarBytes = new ByteArrayOutputStream()
+        java.util.jar.JarOutputStream jos = new java.util.jar.JarOutputStream(jarBytes)
+        java.util.jar.Pack200.newUnpacker().unpack(lzmaDecoded, jos)
+        jos.close()
+        byte[] plainJar = jarBytes.toByteArray()
+        logger.lifecycle("Unpacked binpatches: ${packed.length} packed -> ${plainJar.length} jar bytes")
+        File tmp = new File(uni.parentFile, uni.name + '.tmp')
+        def zout = new java.util.zip.ZipOutputStream(new FileOutputStream(tmp))
+        try
+        {
+            Enumeration e = zipFile.entries()
+            while (e.hasMoreElements())
+            {
+                def ze = e.nextElement()
+                InputStream entryIn = zipFile.getInputStream(ze)
+                try
+                {
+                    zout.putNextEntry(new java.util.zip.ZipEntry(ze.name))
+                    zout << entryIn
+                    zout.closeEntry()
+                }
+                finally
+                {
+                    try { entryIn.close() } catch (Exception ignored) {}
+                }
+            }
+            zout.putNextEntry(new java.util.zip.ZipEntry('binpatches.jar'))
+            zout.write(plainJar)
+            zout.closeEntry()
+        }
+        finally
+        {
+            zout.close()
+        }
+        zipFile.close()
+        // Windows file locking (virus scanners et al) can briefly block the
+        // replace; retry, then fall back to an in-place overwrite.
+        boolean replaced = false
+        for (int i = 0; i < 20 && !replaced; i++)
+        {
+            System.gc()
+            Thread.sleep(500)
+            try { replaced = tmp.renameTo(uni) } catch (Exception ignored) {}
+        }
+        if (!replaced)
+        {
+            logger.lifecycle("renameTo blocked, overwriting ${uni.name} in place")
+            new FileOutputStream(uni).withStream { out ->
+                new FileInputStream(tmp).withStream { ins -> out << ins }
+            }
+            tmp.delete()
+        }
+        logger.lifecycle("Embedded binpatches.jar into ${uni.name}")
+    }
+    finally
+    {
+        try { zipFile.close() } catch (Exception ignored) {}
+    }
 }
 
 uploadArchives {
