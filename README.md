@@ -81,6 +81,9 @@ the development environment, and point your Eclipse workspace at the
 
 [See the "Getting Started" section in the Forge Documentation](https://docs.minecraftforge.net/en/latest/gettingstarted/).
 
+Mod authors targeting the modernized platform: see `MIGRATION.md` and
+`docs/migrations/` for breaking changes and migration guides.
+
 # Contribute to Forge
 
 If you wish to actually inspect Forge, submit PRs or otherwise work with
@@ -107,6 +110,29 @@ costs money to run such a large project as this, so please consider
 
 # Credits
 
+## Upstream projects
+
+This project builds upon work from the Minecraft 1.7.10
+open-source modding community.
+
+Major references include:
+
+- RetroFuturaGradle — GTNewHorizons
+- RetroFuturaBootstrap — GTNewHorizons
+- lwjgl3ify — GTNewHorizons
+- UniMixins — LegacyModdingMC
+- Hodgepodge — GTNewHorizons
+- GTNHLib — GTNewHorizons
+- GTNHGradle — GTNewHorizons
+- Angelica — GTNewHorizons
+- ArchaicFix — embeddedt
+- CoreTweaks — makamys
+- FalseTweaks — FalsePattern
+
+See `UPSTREAMS.md` and `THIRD_PARTY_LICENSES/`
+for projects, licenses, verification status and attribution
+(exact commit/tag to be pinned when code is incorporated).
+
 The classic credits live in `MinecraftForge-Credits.txt` (Forge),
 `fml/CREDITS-fml.txt` (FML) and the `Paulscode * License.txt` files.
 
@@ -123,7 +149,7 @@ Design guidance (techniques reimplemented from scratch, no code copied):
   **RetroFuturaGradle**, anatawa12's **ForgeGradle 1.2 fork**, MCPHackers
   **LaunchWrapper**.
 
-Updated third-party dependencies (Maven Central, see `fml/jsons/`):
+Updated third-party dependencies (Maven Central, see `fml/jsons/1.7.10-dev.json` and `1.7.10-rel.json`):
 - OW2 ASM 9.6 (`asm`, `asm-tree`, `asm-commons`) - replaces
   `asm-all`/`asm-debug-all` 5.x
 - Guava 21.0, Scala 2.11.12, Akka 2.3.16, Typesafe Config 1.4.3,

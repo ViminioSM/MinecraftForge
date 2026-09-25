@@ -16,6 +16,26 @@ Do not preserve a bad API, implementation, bootstrap mechanism, transformer, or 
 
 Prefer a well-designed modern replacement when the migration cost is reasonable.
 
+The canonical migration pipeline is:
+
+```text
+Old mod
+    ↓
+automated analysis
+    ↓
+migration / refactoring
+    ↓
+new API
+    ↓
+recompilation
+    ↓
+modernized Forge
+```
+
+There is explicitly NO requirement that the new Forge must run old mods
+without recompilation. Prioritize save/world and gameplay-behavior
+compatibility where possible, not legacy binary ABI compatibility.
+
 ---
 
 # Core Principles
