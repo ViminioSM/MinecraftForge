@@ -43,6 +43,7 @@ public class ModMetadata
     public String credits = "";
     public String parent = "";
     public String[] screenshots;
+    public String[] mixins;
 
     // this field is not for use in the json
     public transient ModContainer parentMod;

@@ -35,6 +35,9 @@ import net.minecraft.launchwrapper.ITweaker;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 
+import cpw.mods.fml.common.asm.mixin.FMLMixinBootstrap;
+import cpw.mods.fml.common.asm.mixin.FMLMixinController;
+
 import org.apache.logging.log4j.Level;
 
 import com.google.common.base.Strings;
@@ -117,6 +120,7 @@ public class CoreModManager {
             FMLRelaunchLog.fine("Running coremod plugin %s", name);
             data.put("coremodLocation", location);
             coreModInstance.injectData(data);
+            FMLMixinController.queueEarlyConfigs(coreModInstance, location, classLoader);
             String setupClass = coreModInstance.getSetupClass();
             if (setupClass != null)
             {
@@ -193,6 +197,8 @@ public class CoreModManager {
             FMLRelaunchLog.log(Level.ERROR, e, "The patch transformer failed to load! This is critical, loading cannot continue!");
             throw Throwables.propagate(e);
         }
+
+        FMLMixinBootstrap.init(classLoader);
 
         loadPlugins = new ArrayList<FMLPluginWrapper>();
         for (String rootPluginName : rootPlugins)
@@ -573,6 +579,26 @@ public class CoreModManager {
         Launch.blackboard.put("fml.deobfuscatedEnvironment", deobfuscatedEnvironment);
         tweaker.injectCascadingTweak("cpw.mods.fml.common.launcher.FMLDeobfTweaker");
         tweakSorting.put("cpw.mods.fml.common.launcher.FMLDeobfTweaker", Integer.valueOf(1000));
+        // The Mixin transformer must register after deobfuscation and the
+        // access transformers, so it sorts last. Only cascaded when the Mixin
+        // jar is actually present - otherwise the launch would fail.
+        try
+        {
+            Class.forName(FMLMixinBootstrap.MIXIN_TWEAKER_CLASS, false, classLoader);
+            if (!FMLMixinBootstrap.isProxyRegistered(classLoader))
+            {
+                tweaker.injectCascadingTweak(FMLMixinBootstrap.MIXIN_TWEAKER_CLASS);
+                tweakSorting.put(FMLMixinBootstrap.MIXIN_TWEAKER_CLASS, Integer.valueOf(1001));
+            }
+            else
+            {
+                FMLRelaunchLog.info("Mixin transformer already registered by another booter - FML will not register its own");
+            }
+        }
+        catch (ClassNotFoundException e)
+        {
+            FMLRelaunchLog.fine("SpongePowered Mixin not found - Mixin tweaker not cascaded");
+        }
     }
 
     public static void injectCoreModTweaks(FMLInjectionAndSortingTweaker fmlInjectionAndSortingTweaker)

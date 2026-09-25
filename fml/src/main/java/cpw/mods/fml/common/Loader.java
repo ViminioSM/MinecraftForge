@@ -66,6 +66,7 @@ import cpw.mods.fml.common.LoaderState.ModState;
 import cpw.mods.fml.common.MetadataCollection.ArtifactVersionAdapter;
 import cpw.mods.fml.common.ModContainer.Disableable;
 import cpw.mods.fml.common.ProgressManager.ProgressBar;
+import cpw.mods.fml.common.asm.mixin.FMLMixinController;
 import cpw.mods.fml.common.discovery.ModDiscoverer;
 import cpw.mods.fml.common.event.FMLInterModComms;
 import cpw.mods.fml.common.event.FMLLoadEvent;
@@ -509,6 +510,7 @@ public class Loader
                 }
             }
         }
+        FMLMixinController.onLateConfigs(modClassLoader, getActiveModList());
         modController.transition(LoaderState.CONSTRUCTING, false);
         modController.distributeStateMessage(LoaderState.CONSTRUCTING, modClassLoader, discoverer.getASMTable(), reverseDependencies);
 

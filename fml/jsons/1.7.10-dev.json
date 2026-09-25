@@ -31,6 +31,21 @@
       "url" : "https://repo.maven.apache.org/maven2"
     },
     {
+      "name": "org.ow2.asm:asm-util:9.6",
+      "children" : ["sources"],
+      "url" : "https://repo.maven.apache.org/maven2"
+    },
+    {
+      "name": "org.ow2.asm:asm-analysis:9.6",
+      "children" : ["sources"],
+      "url" : "https://repo.maven.apache.org/maven2"
+    },
+    {
+      "name": "org.spongepowered:mixin:0.8.7",
+      "children" : ["sources"],
+      "url" : "https://maven.minecraftforge.net/"
+    },
+    {
       "name": "com.typesafe.akka:akka-actor_2.11:2.3.16",
       "children" : ["sources"],
       "url" : "https://repo.maven.apache.org/maven2"

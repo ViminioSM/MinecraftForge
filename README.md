@@ -136,3 +136,12 @@ Build/runtime artifacts (Mojang, for the offline workspace cache):
 
 Build bridge: **Eclipse Temurin JDK 8** (https://adoptium.net), needed only
 to run the legacy Gradle toolchain; the game itself runs on JDK 21.
+
+Native Mixin support (SpongePowered **Mixin 0.8.7**, MIT -
+https://github.com/SpongePowered/Mixin) is built into FML: mods declare
+`"mixins": [...]` in `mcmod.info`, coremods may implement
+`IFMLEarlyMixinLoader`. The late-config orchestration (refreshing Mixin's
+selected/prepared configs around mod construction) adapts the idiom from
+LegacyModdingMC **UniMixins** `mixinbooterlegacy` (LGPLv2.1, by tox1cozz -
+https://github.com/LegacyModdingMC/UniMixins) with attribution; no
+LGPLv3-licensed loader code (GTNH `gtnhmixins`, `spongemixins`) was taken.
