@@ -109,6 +109,7 @@ public class FMLMixinBootstrap
             // Production runtime names are searge-mapped; mods author mixins
             // against searge names and ship refmaps for notch.
             setObfuscationContext("searge");
+            registerErrorHandler();
             writeFlag();
             FMLRelaunchLog.info("SpongePowered Mixin support initialised");
             return true;
@@ -154,5 +155,19 @@ public class FMLMixinBootstrap
         Class<?> envClass = Class.forName("org.spongepowered.asm.mixin.MixinEnvironment", true, mixinLoader());
         Object env = envClass.getMethod("getDefaultEnvironment").invoke(null);
         env.getClass().getMethod("setObfuscationContext", String.class).invoke(env, context);
+    }
+
+    private static void registerErrorHandler()
+    {
+        try
+        {
+            Class<?> mixins = Class.forName("org.spongepowered.asm.mixin.Mixins", true, mixinLoader());
+            mixins.getMethod("registerErrorHandlerClass", String.class).invoke(null, "cpw.mods.fml.common.asm.mixin.MixinCrashErrorHandler");
+            FMLRelaunchLog.fine("Mixin crash error handler registered");
+        }
+        catch (Exception e)
+        {
+            FMLRelaunchLog.warning("Could not register Mixin crash error handler: %s", e.toString());
+        }
     }
 }

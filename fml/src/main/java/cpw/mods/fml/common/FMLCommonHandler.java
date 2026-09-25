@@ -14,6 +14,10 @@ package cpw.mods.fml.common;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Field;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,6 +56,7 @@ import cpw.mods.fml.common.gameevent.InputEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.Phase;
+import cpw.mods.fml.relauncher.FMLRelaunchLog;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.server.FMLServerHandler;
 
@@ -361,6 +366,121 @@ public class FMLCommonHandler
         {
             category.addCrashSectionCallable(call.getLabel(), call);
         }
+        addMixinInfoToCrashReport(crashReport, category);
+    }
+
+    /**
+     * Lists mixins (and mixin errors) affecting classes in the crash stack
+     * trace. Mixin failures are otherwise notoriously hard to attribute.
+     *
+     * <p>The idea follows UniMixins' crash-report enhancement (Unlicense, by
+     * LegacyModdingMC), reimplemented here inline so it shares exactly the
+     * classloading fate of this method: a separate hook class can end up
+     * defined by a different classloader than the game classes, breaking its
+     * references to them. This method must never break crash reporting.</p>
+     */
+    private void addMixinInfoToCrashReport(CrashReport crashReport, CrashReportCategory category)
+    {
+        try
+        {
+            if (!cpw.mods.fml.common.asm.mixin.FMLMixinBootstrap.isInitialised())
+            {
+                return;
+            }
+            Set<String> classes = new LinkedHashSet<String>();
+            Throwable cause = crashReport.getCrashCause();
+            while (cause != null)
+            {
+                if (cause instanceof ClassNotFoundException && cause.getMessage() != null && !cause.getMessage().isEmpty())
+                {
+                    classes.add(cause.getMessage());
+                }
+                for (StackTraceElement element : cause.getStackTrace())
+                {
+                    classes.add(element.getClassName());
+                }
+                cause = cause.getCause();
+            }
+            ClassLoader loader = cpw.mods.fml.common.asm.mixin.FMLMixinBootstrap.mixinLoader();
+
+            StringBuilder applied = new StringBuilder();
+            for (String cls : classes)
+            {
+                Collection<?> infos = getMixinInfos(loader, cls);
+                if (!infos.isEmpty())
+                {
+                    applied.append("\n\t\t").append(cls).append(":");
+                    for (Object info : infos)
+                    {
+                        applied.append("\n\t\t\t").append(info);
+                    }
+                }
+            }
+            if (applied.length() > 0)
+            {
+                category.addCrashSection("Mixins in Stacktrace", applied.toString());
+            }
+
+            StringBuilder errors = new StringBuilder();
+            for (String cls : classes)
+            {
+                List<String> clsErrors = cpw.mods.fml.common.asm.mixin.MixinCrashErrorHandler.getErrorsForClass(cls);
+                if (!clsErrors.isEmpty())
+                {
+                    errors.append("\n\t\t").append(cls).append(":");
+                    for (String err : clsErrors)
+                    {
+                        errors.append("\n\t\t\t").append(err);
+                    }
+                }
+            }
+            if (errors.length() > 0)
+            {
+                category.addCrashSection("Mixin Errors in Stacktrace", errors.toString());
+            }
+        }
+        catch (Throwable t)
+        {
+            FMLRelaunchLog.log(Level.DEBUG, t, "Mixin crash info enhancement failed");
+        }
+    }
+
+    private static Collection<?> getMixinInfos(ClassLoader loader, String cls)
+    {
+        Set<Object> infos = new HashSet<Object>();
+        try
+        {
+            Class<?> mixins = Class.forName("org.spongepowered.asm.mixin.Mixins", true, loader);
+            Object found = mixins.getMethod("getMixinsForClass", String.class).invoke(null, cls);
+            if (found instanceof Collection)
+            {
+                infos.addAll((Collection<?>) found);
+            }
+        }
+        catch (Exception e)
+        {
+            // fall through to the ClassInfo fallback below
+        }
+        try
+        {
+            Class<?> classInfoClass = Class.forName("org.spongepowered.asm.mixin.transformer.ClassInfo", true, loader);
+            Object info = classInfoClass.getMethod("fromCache", String.class).invoke(null, cls);
+            if (info != null)
+            {
+                Field field = classInfoClass.getDeclaredField("mixins");
+                field.setAccessible(true);
+                Object mixins = field.get(info);
+                if (mixins instanceof Collection)
+                {
+                    infos.addAll((Collection<?>) mixins);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            // ignore - no mixin info available for this class
+        }
+        return infos;
     }
 
     public void handleWorldDataSave(SaveHandler handler, WorldInfo worldInfo, NBTTagCompound tagCompound)

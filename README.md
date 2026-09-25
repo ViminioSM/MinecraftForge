@@ -145,3 +145,7 @@ selected/prepared configs around mod construction) adapts the idiom from
 LegacyModdingMC **UniMixins** `mixinbooterlegacy` (LGPLv2.1, by tox1cozz -
 https://github.com/LegacyModdingMC/UniMixins) with attribution; no
 LGPLv3-licensed loader code (GTNH `gtnhmixins`, `spongemixins`) was taken.
+Crash reports list the mixins (and mixin errors) affecting stack-trace
+classes, an idea reimplemented from UniMixins' `compat` module (Unlicense,
+by LegacyModdingMC) directly inside `FMLCommonHandler` so it shares the
+exact classloading fate of crash reporting itself.
