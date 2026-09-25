@@ -83,6 +83,7 @@ public class FMLMixinController
         }
         LaunchClassLoader classLoader = Launch.classLoader;
         boolean queued = false;
+        FMLMixinBootstrap.refreshTransformerExclusions(classLoader);
         for (ModContainer container : activeMods)
         {
             String[] configs = container.getMetadata() != null ? container.getMetadata().mixins : null;

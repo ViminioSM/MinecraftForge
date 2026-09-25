@@ -148,4 +148,11 @@ LGPLv3-licensed loader code (GTNH `gtnhmixins`, `spongemixins`) was taken.
 Crash reports list the mixins (and mixin errors) affecting stack-trace
 classes, an idea reimplemented from UniMixins' `compat` module (Unlicense,
 by LegacyModdingMC) directly inside `FMLCommonHandler` so it shares the
-exact classloading fate of crash reporting itself.
+exact classloading fate of crash reporting itself. For packs bringing their
+own transformers, FML honors mixin-safety markers (its own
+`IMixinSafeTransformer` plus Makamys' equivalent, honoured by name) and
+supports opt-in preprocessing exclusions via
+`-Dfml.mixin.excludedTransformers`, following Makamys' **Mixingasm** (public
+domain); foreign shaded ASM references (`org.spongepowered.asm.lib`,
+`org.spongepowered.libraries...`) are rewritten to the shipped ASM 9.6,
+following UniMixins' ASM remapper idea (Unlicense).

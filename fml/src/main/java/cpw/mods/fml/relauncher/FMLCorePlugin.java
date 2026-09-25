@@ -20,6 +20,7 @@ public class FMLCorePlugin implements IFMLLoadingPlugin
     public String[] getASMTransformerClass()
     {
         return new String[] {
+                             "cpw.mods.fml.common.asm.transformers.ASMRemapperTransformer",
                              "cpw.mods.fml.common.asm.transformers.ObjectHolderTransformer",
                              "cpw.mods.fml.common.asm.transformers.MarkerTransformer",
                              "cpw.mods.fml.common.asm.transformers.SideTransformer",

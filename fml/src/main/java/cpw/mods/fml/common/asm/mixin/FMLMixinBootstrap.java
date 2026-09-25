@@ -111,6 +111,7 @@ public class FMLMixinBootstrap
             setObfuscationContext("searge");
             registerErrorHandler();
             writeFlag();
+            refreshTransformerExclusions(classLoader);
             FMLRelaunchLog.info("SpongePowered Mixin support initialised");
             return true;
         }
@@ -169,5 +170,96 @@ public class FMLMixinBootstrap
         {
             FMLRelaunchLog.warning("Could not register Mixin crash error handler: %s", e.toString());
         }
+    }
+
+    /**
+     * Excludes mixin-unsafe transformers from Mixin's internal class reading.
+     *
+     * <p>Mixin reads target classes through the registered transformers; a
+     * transformer that strips members or emits bytecode Mixin's reader cannot
+     * handle breaks that analysis. Exclusions are opt-in via
+     * {@code -Dfml.mixin.excludedTransformers=com.foo.,com.bar.Baz} (class
+     * name prefixes, comma separated). Transformers implementing
+     * {@link IMixinSafeTransformer} (or Makamys' equivalent marker, honoured
+     * by name) and everything under {@code cpw.mods.fml.} are always exempt.
+     * The idea follows Makamys' Mixingasm (public domain).</p>
+     */
+    static void refreshTransformerExclusions(LaunchClassLoader classLoader)
+    {
+        String property = System.getProperty("fml.mixin.excludedTransformers", "").trim();
+        if (property.isEmpty())
+        {
+            return;
+        }
+        try
+        {
+            ClassLoader runtimeLoader = mixinLoader();
+            Class<?> serviceClass = Class.forName("org.spongepowered.asm.service.MixinService", true, runtimeLoader);
+            Object service = serviceClass.getMethod("getService").invoke(null);
+            Object provider = service.getClass().getMethod("getTransformerProvider").invoke(service);
+            if (provider == null)
+            {
+                return;
+            }
+            java.lang.reflect.Method addExclusion = provider.getClass().getMethod("addTransformerExclusion", String.class);
+            for (Object transformer : classLoader.getTransformers())
+            {
+                if (transformer == null)
+                {
+                    continue;
+                }
+                String name = transformer.getClass().getName();
+                if (isExemptFromExclusion(transformer.getClass(), name))
+                {
+                    continue;
+                }
+                for (String pattern : property.split(","))
+                {
+                    pattern = pattern.trim();
+                    if (!pattern.isEmpty() && (name.equals(pattern) || name.startsWith(pattern)))
+                    {
+                        FMLRelaunchLog.info("Excluding transformer %s from Mixin preprocessing (fml.mixin.excludedTransformers)", name);
+                        addExclusion.invoke(provider, name);
+                        break;
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            FMLRelaunchLog.warning("Could not apply Mixin transformer exclusions: %s", e.toString());
+        }
+    }
+
+    private static boolean isExemptFromExclusion(Class<?> transformerClass, String name)
+    {
+        if (name.startsWith("cpw.mods.fml."))
+        {
+            return true;
+        }
+        try
+        {
+            for (Class<?> iface : transformerClass.getInterfaces())
+            {
+                String ifaceName = iface.getName();
+                if (ifaceName.equals("cpw.mods.fml.common.asm.mixin.IMixinSafeTransformer")
+                        || ifaceName.equals("makamys.mixingasm.api.IMixinSafeTransformer"))
+                {
+                    return true;
+                }
+            }
+            for (java.lang.annotation.Annotation annotation : transformerClass.getAnnotations())
+            {
+                if (annotation.annotationType().getName().equals("makamys.mixingasm.api.MixinSafeTransformer"))
+                {
+                    return true;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            // ignore - absence of proof is not proof of safety
+        }
+        return false;
     }
 }
